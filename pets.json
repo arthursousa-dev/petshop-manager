@@ -1,0 +1,14 @@
+[
+    {"id":"pt001","nome":"Bolinha","cliente_id":"cl001","especie":"Cão","raca":"Poodle","peso":"5.2","alergias":"Shampoo com sulfato","nascimento":"2019-03-15","criado_em":"2026-01-10 10:00:00"},
+    {"id":"pt002","nome":"Mimi","cliente_id":"cl002","especie":"Gato","raca":"Siamês","peso":"3.8","alergias":"","nascimento":"2021-07-22","criado_em":"2026-02-15 09:30:00"},
+    {"id":"pt003","nome":"Rex","cliente_id":"cl003","especie":"Cão","raca":"Golden Retriever","peso":"28.5","alergias":"Intolerância à lactose","nascimento":"2018-11-05","criado_em":"2026-02-20 14:00:00"},
+    {"id":"pt004","nome":"Thor","cliente_id":"cl001","especie":"Cão","raca":"Labrador","peso":"30.1","alergias":"","nascimento":"2022-06-10","criado_em":"2026-01-10 11:00:00"},
+    {"id":"pt005","nome":"Mel","cliente_id":"cl004","especie":"Cão","raca":"Bulldog Francês","peso":"11.2","alergias":"Farinha de trigo","nascimento":"2023-02-14","criado_em":"2026-03-05 11:30:00"},
+    {"id":"pt006","nome":"Flash","cliente_id":"cl004","especie":"Cão","raca":"Dachshund","peso":"7.8","alergias":"","nascimento":"2020-09-20","criado_em":"2026-03-05 11:35:00"},
+    {"id":"pt007","nome":"Pingo","cliente_id":"cl005","especie":"Gato","raca":"Maine Coon","peso":"6.5","alergias":"","nascimento":"2022-01-08","criado_em":"2026-03-18 10:00:00"},
+    {"id":"pt008","nome":"Belinha","cliente_id":"cl005","especie":"Cão","raca":"Shih Tzu","peso":"4.9","alergias":"Proteína bovina","nascimento":"2021-04-25","criado_em":"2026-03-18 10:05:00"},
+    {"id":"pt009","nome":"Rocky","cliente_id":"cl006","especie":"Cão","raca":"Pastor Alemão","peso":"35.0","alergias":"","nascimento":"2020-07-15","criado_em":"2026-04-02 14:30:00"},
+    {"id":"pt010","nome":"Luna","cliente_id":"cl007","especie":"Gato","raca":"Persa","peso":"4.1","alergias":"Proteína de soja","nascimento":"2023-11-03","criado_em":"2026-04-15 10:30:00"},
+    {"id":"pt011","nome":"Max","cliente_id":"cl006","especie":"Cão","raca":"Husky Siberiano","peso":"25.3","alergias":"","nascimento":"2021-12-01","criado_em":"2026-04-02 14:35:00"},
+    {"id":"pt012","nome":"Lili","cliente_id":"cl007","especie":"Gato","raca":"Angora","peso":"3.2","alergias":"","nascimento":"2024-03-10","criado_em":"2026-04-15 10:35:00"}
+]

@@ -1,0 +1,9 @@
+[
+    {"id":"cl001","nome":"Maria Silva","email":"cliente@petshop.com","telefone":"(67) 99234-5678","endereco":"Rua das Flores, 123 – Campo Grande, MS","criado_em":"2026-01-10 09:00:00"},
+    {"id":"cl002","nome":"Carlos Oliveira","email":"carlos@email.com","telefone":"(67) 99876-4321","endereco":"Av. Afonso Pena, 456 – Campo Grande, MS","criado_em":"2026-02-15 14:30:00"},
+    {"id":"cl003","nome":"Fernanda Costa","email":"fernanda@email.com","telefone":"(67) 99555-1234","endereco":"Rua 14 de Julho, 789 – Campo Grande, MS","criado_em":"2026-02-20 10:00:00"},
+    {"id":"cl004","nome":"Roberto Lima","email":"roberto@email.com","telefone":"(67) 99444-5678","endereco":"Av. Rachid Neder, 321 – Campo Grande, MS","criado_em":"2026-03-05 11:00:00"},
+    {"id":"cl005","nome":"Juliana Martins","email":"juliana@email.com","telefone":"(67) 99333-8765","endereco":"Rua José Antônio, 654 – Campo Grande, MS","criado_em":"2026-03-18 09:30:00"},
+    {"id":"cl006","nome":"Pedro Santos","email":"pedro@email.com","telefone":"(67) 99222-3456","endereco":"Rua Maracaju, 987 – Campo Grande, MS","criado_em":"2026-04-02 14:00:00"},
+    {"id":"cl007","nome":"Camila Ferreira","email":"camila@email.com","telefone":"(67) 99111-2345","endereco":"Av. Ceará, 1234 – Campo Grande, MS","criado_em":"2026-04-15 10:00:00"}
+]

@@ -1,0 +1,10 @@
+[
+    {"id":"sv001","nome":"Banho e Tosa","descricao":"Banho completo com escova, perfume e tosa higiênica","preco":80,"duracao":"1h30min","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv002","nome":"Consulta Veterinária","descricao":"Consulta clínica geral com veterinário especialista","preco":150,"duracao":"45min","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv003","nome":"Vacinação","descricao":"Aplicação de vacinas conforme calendário vacinal do pet","preco":120,"duracao":"20min","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv004","nome":"Tosa Completa","descricao":"Tosa artística ou funcional conforme padrão da raça","preco":100,"duracao":"2h","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv005","nome":"Microchip / Identificação","descricao":"Implante de microchip de identificação permanente ISO 11784","preco":200,"duracao":"30min","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv006","nome":"Limpeza Dental","descricao":"Profilaxia e limpeza dental com ultrassom veterinário","preco":280,"duracao":"1h","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv007","nome":"Hemograma Completo","descricao":"Exame de sangue completo com resultado em 2 horas","preco":180,"duracao":"30min","criado_em":"2026-01-05 08:00:00"},
+    {"id":"sv008","nome":"Hospedagem Diária","descricao":"Hospedagem com alimentação, brincadeiras e cuidados 24h","preco":120,"duracao":"24h","criado_em":"2026-01-05 08:00:00"}
+]
