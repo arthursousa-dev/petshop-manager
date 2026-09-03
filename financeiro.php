@@ -13,6 +13,10 @@ foreach($dados as $r){
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
+    if (!csrf_valido($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        die('Sessão expirada. Recarregue a página e tente novamente.');
+    }
     $dados[]=[
         'id'=>time(),
         'tipo'=>$_POST['tipo'],
@@ -60,6 +64,7 @@ th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
 <div class="fin-form">
 <h2>Novo Lançamento</h2>
 <form method="post">
+            <?= csrf_campo() ?>
 <div class="fin-grid">
 <select name="tipo">
 <option value="entrada">Entrada</option>

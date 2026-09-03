@@ -9,6 +9,10 @@ $clientes = ler_json('clientes.json');
 $msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['atendente','vet'])) {
+    if (!csrf_valido($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        die('Sessão expirada. Recarregue a página e tente novamente.');
+    }
     $acao = $_POST['acao'] ?? '';
     if ($acao === 'criar') {
         $novo = [
@@ -103,6 +107,7 @@ function get_cliente_nome($clientes, $id) {
         <td style="white-space:nowrap">
           <button class="btn-sm btn-edit" onclick="editarPet('<?= htmlspecialchars(json_encode($pt), ENT_QUOTES) ?>')">Editar</button>
           <form method="POST" style="display:inline" onsubmit="return confirm('Remover pet?')">
+            <?= csrf_campo() ?>
             <input type="hidden" name="acao" value="excluir">
             <input type="hidden" name="id" value="<?= $pt['id'] ?>">
             <button type="submit" class="btn-sm btn-danger">Excluir</button>
@@ -122,6 +127,7 @@ function get_cliente_nome($clientes, $id) {
   <div class="modal">
     <div class="modal-header"><h3>Novo Pet</h3><button onclick="fecharModal('modal-criar')" class="modal-close">✕</button></div>
     <form method="POST" action="pets.php">
+            <?= csrf_campo() ?>
       <input type="hidden" name="acao" value="criar">
       <div class="form-row">
         <div class="form-group"><label>Nome do Pet *</label><input type="text" name="nome" required></div>
@@ -157,6 +163,7 @@ function get_cliente_nome($clientes, $id) {
   <div class="modal">
     <div class="modal-header"><h3>Editar Pet</h3><button onclick="fecharModal('modal-editar')" class="modal-close">✕</button></div>
     <form method="POST" action="pets.php">
+            <?= csrf_campo() ?>
       <input type="hidden" name="acao" value="editar">
       <input type="hidden" name="id" id="ep-id">
       <div class="form-row">

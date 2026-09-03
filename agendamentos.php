@@ -11,6 +11,10 @@ $servicos = ler_json('servicos.json');
 $msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_valido($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        die('Sessão expirada. Recarregue a página e tente novamente.');
+    }
     $acao = $_POST['acao'] ?? '';
     if ($acao === 'criar' && perfil_pode(['atendente','vet','cliente'])) {
         $novo = [
@@ -103,6 +107,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
         <td style="white-space:nowrap">
           <?php if (perfil_pode(['atendente','vet'])): ?>
           <form method="POST" style="display:inline">
+            <?= csrf_campo() ?>
             <input type="hidden" name="acao" value="status">
             <input type="hidden" name="id" value="<?= $ag['id'] ?>">
             <select name="novo_status" onchange="this.form.submit()" class="select-sm">
@@ -113,6 +118,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
             </select>
           </form>
           <form method="POST" style="display:inline" onsubmit="return confirm('Excluir agendamento?')">
+            <?= csrf_campo() ?>
             <input type="hidden" name="acao" value="excluir">
             <input type="hidden" name="id" value="<?= $ag['id'] ?>">
             <button type="submit" class="btn-sm btn-danger">✕</button>
@@ -133,6 +139,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
   <div class="modal">
     <div class="modal-header"><h3>Novo Agendamento</h3><button onclick="fecharModal('modal-criar')" class="modal-close">✕</button></div>
     <form method="POST" action="agendamentos.php">
+            <?= csrf_campo() ?>
       <input type="hidden" name="acao" value="criar">
       <?php if (perfil_pode(['atendente','vet'])): ?>
       <div class="form-group"><label>Cliente *</label>

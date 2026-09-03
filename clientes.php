@@ -9,6 +9,10 @@ $msg = '';
 $erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_valido($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        die('Sessão expirada. Recarregue a página e tente novamente.');
+    }
     $acao = $_POST['acao'] ?? '';
 
     // Cliente edita o próprio perfil
@@ -199,6 +203,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
         <button onclick="fecharModal('modal-editar-perfil')" class="modal-close">✕</button>
       </div>
       <form method="POST" action="clientes.php">
+            <?= csrf_campo() ?>
         <input type="hidden" name="acao" value="editar">
         <div class="form-group">
           <label>Nome completo</label>
@@ -261,6 +266,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
           <td style="white-space:nowrap">
             <button class="btn-sm btn-edit" onclick="editarCliente('<?= htmlspecialchars(json_encode($cl), ENT_QUOTES) ?>')">Editar</button>
             <form method="POST" style="display:inline" onsubmit="return confirm('Remover cliente?')">
+            <?= csrf_campo() ?>
               <input type="hidden" name="acao" value="excluir">
               <input type="hidden" name="id" value="<?= $cl['id'] ?>">
               <button type="submit" class="btn-sm btn-danger">Excluir</button>
@@ -280,6 +286,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
     <div class="modal">
       <div class="modal-header"><h3>Novo Cliente</h3><button onclick="fecharModal('modal-criar')" class="modal-close">✕</button></div>
       <form method="POST" action="clientes.php">
+            <?= csrf_campo() ?>
         <input type="hidden" name="acao" value="criar">
         <div class="form-row">
           <div class="form-group"><label>Nome *</label><input type="text" name="nome" required></div>
@@ -302,6 +309,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
     <div class="modal">
       <div class="modal-header"><h3>Editar Cliente</h3><button onclick="fecharModal('modal-editar')" class="modal-close">✕</button></div>
       <form method="POST" action="clientes.php">
+            <?= csrf_campo() ?>
         <input type="hidden" name="acao" value="editar">
         <input type="hidden" name="id" id="edit-id">
         <div class="form-row">

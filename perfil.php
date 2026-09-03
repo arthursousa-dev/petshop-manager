@@ -29,6 +29,10 @@ $meu = $perfis[$idx_perfil];
 
 // POST: salvar edição
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'editar') {
+    if (!csrf_valido($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        die('Sessão expirada. Recarregue a página e tente novamente.');
+    }
     $novo_nome = trim($_POST['nome'] ?? '');
     if (!empty($novo_nome)) {
         $perfis[$idx_perfil]['nome']     = $novo_nome;
@@ -131,6 +135,7 @@ $ags_total      = count(ler_json('agendamentos.json'));
       <button onclick="fecharModal('modal-editar')" class="modal-close">✕</button>
     </div>
     <form method="POST" action="perfil.php">
+            <?= csrf_campo() ?>
       <input type="hidden" name="acao" value="editar">
       <div class="form-group">
         <label>Nome de exibição</label>
