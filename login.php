@@ -1,25 +1,25 @@
 <?php
 session_start();
+require 'functions.php';
 if (!empty($_GET['_db_fresh'])) { $_SESSION = []; session_regenerate_id(true); }
-
-$usuarios = [
-    'cliente@petshop.com'    => ['senha' => 'cliente123',    'perfil' => 'cliente',    'nome' => 'Maria Silva'],
-    'atendente@petshop.com'  => ['senha' => 'atendente123',  'perfil' => 'atendente',  'nome' => 'João Atendente'],
-    'vet@petshop.com'        => ['senha' => 'vet123',        'perfil' => 'vet',        'nome' => 'Dra. Ana Vet'],
-];
 
 $erro = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $senha = $_POST['senha'] ?? '';
-    if (isset($usuarios[$email]) && $usuarios[$email]['senha'] === $senha) {
-        $_SESSION['logado'] = true;
-        $_SESSION['perfil'] = $usuarios[$email]['perfil'];
-        $_SESSION['usuario'] = ['email' => $email, 'nome' => $usuarios[$email]['nome']];
-        header('Location: index.php');
-        exit;
+    if (!csrf_valido($_POST['csrf_token'] ?? null)) {
+        $erro = 'Sessão expirada. Recarregue a página e tente novamente.';
     } else {
-        $erro = 'E-mail ou senha incorretos.';
+        $email = trim($_POST['email'] ?? '');
+        $senha = $_POST['senha'] ?? '';
+        $usuario = autenticar($email, $senha);
+        if ($usuario) {
+            $_SESSION['logado'] = true;
+            $_SESSION['perfil'] = $usuario['perfil'];
+            $_SESSION['usuario'] = ['email' => $usuario['email'], 'nome' => $usuario['nome']];
+            header('Location: index.php');
+            exit;
+        } else {
+            $erro = 'E-mail ou senha incorretos.';
+        }
     }
 }
 ?>
@@ -126,6 +126,7 @@ body{font-family:'Inter','Segoe UI',sans-serif;display:flex;height:100vh;overflo
     <div class="erro">⚠️ <?= htmlspecialchars($erro) ?></div>
     <?php endif; ?>
     <form method="POST" action="login.php">
+      <?= csrf_campo() ?>
       <div class="form-group">
         <label>E-mail</label>
         <input type="email" name="email" placeholder="seu@email.com" required autocomplete="username">

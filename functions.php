@@ -46,3 +46,35 @@ function perfil_pode($perfis_permitidos) {
     $perfil = $_SESSION['perfil'] ?? '';
     return in_array($perfil, $perfis_permitidos);
 }
+
+/**
+ * Autentica contra usuarios.json (senha em hash bcrypt).
+ * Retorna o registro do usuário ou false.
+ */
+function autenticar($email, $senha) {
+    $usuarios = ler_json('usuarios.json');
+    foreach ($usuarios as $u) {
+        if (strtolower($u['email']) === strtolower($email) && password_verify($senha, $u['senha'] ?? '')) {
+            return $u;
+        }
+    }
+    return false;
+}
+
+/**
+ * Token CSRF por sessão.
+ */
+function csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_campo() {
+    return '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+}
+
+function csrf_valido($token) {
+    return !empty($_SESSION['csrf_token']) && !empty($token) && hash_equals($_SESSION['csrf_token'], $token);
+}
