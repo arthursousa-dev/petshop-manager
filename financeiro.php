@@ -1,34 +1,34 @@
 <?php
-session_start();
+require_once __DIR__ . '/bootstrap_sessao.php';
 require 'functions.php';
 verificar_sessao();
 
-$arquivo='financeiro.json';
-$dados=file_exists($arquivo)?json_decode(file_get_contents($arquivo),true):[];
+$pdo = \App\Config\Database::getConnection();
 
-$totalEntradas=0; $totalSaidas=0;
-foreach($dados as $r){
-    if(($r['tipo'] ?? '')==='entrada') $totalEntradas += floatval($r['valor']);
-    if(($r['tipo'] ?? '')==='saida') $totalSaidas += floatval($r['valor']);
-}
+$totalEntradas = (float) ($pdo->query("SELECT COALESCE(SUM(valor),0) FROM financeiro_lancamentos WHERE tipo = 'entrada'")->fetchColumn());
+$totalSaidas   = (float) ($pdo->query("SELECT COALESCE(SUM(valor),0) FROM financeiro_lancamentos WHERE tipo = 'saida'")->fetchColumn());
 
-if($_SERVER['REQUEST_METHOD']==='POST'){
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido($_POST['csrf_token'] ?? null)) {
         http_response_code(403);
         die('Sessão expirada. Recarregue a página e tente novamente.');
     }
-    $dados[]=[
-        'id'=>time(),
-        'tipo'=>$_POST['tipo'],
-        'descricao'=>$_POST['descricao'],
-        'categoria'=>$_POST['categoria'],
-        'valor'=>(float)$_POST['valor'],
-        'data'=>$_POST['data']
-    ];
-    file_put_contents($arquivo,json_encode($dados,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+    $stmt = $pdo->prepare(
+        'INSERT INTO financeiro_lancamentos (tipo, descricao, categoria, valor, data)
+         VALUES (:tipo, :descricao, :categoria, :valor, :data)'
+    );
+    $stmt->execute([
+        ':tipo' => $_POST['tipo'], ':descricao' => $_POST['descricao'],
+        ':categoria' => $_POST['categoria'], ':valor' => (float) $_POST['valor'], ':data' => $_POST['data'],
+    ]);
     header('Location: financeiro.php');
     exit;
 }
+
+$dados = $pdo->query(
+    "SELECT id, to_char(data,'YYYY-MM-DD') AS data, tipo, descricao, categoria, valor
+     FROM financeiro_lancamentos ORDER BY data DESC, id DESC"
+)->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -84,7 +84,7 @@ th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
 <h2>Movimentações</h2>
 <table>
 <tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr>
-<?php foreach(array_reverse($dados) as $r): ?>
+<?php foreach($dados as $r): ?>
 <tr>
 <td><?=$r['data']?></td>
 <td><?=$r['tipo']?></td>
