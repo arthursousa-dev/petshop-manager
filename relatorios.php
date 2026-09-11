@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/bootstrap_sessao.php';
 require 'functions.php';
 verificar_sessao();
 if (!perfil_pode(['atendente','vet'])) { header('Location: index.php'); exit; }
