@@ -1,0 +1,20 @@
+[
+  {
+    "email": "cliente@petshop.com",
+    "senha": "$2b$10$SlFfcWK5Vp952PcpI0GEGuWPeGwP6rZHOLuiUhOu/qye2vXk7u0wO",
+    "perfil": "cliente",
+    "nome": "Maria Silva"
+  },
+  {
+    "email": "atendente@petshop.com",
+    "senha": "$2b$10$Vi0G/rfB2jDg61e8aoB35OVtPgKjlzwPkU/vxK9byvPG7NyFhhhG6",
+    "perfil": "atendente",
+    "nome": "João Atendente"
+  },
+  {
+    "email": "vet@petshop.com",
+    "senha": "$2b$10$b2vHqlE7jXdLGk9hm6QbRumQYDWZx/vO8nM1YMsZo1pyIFHnyHj1K",
+    "perfil": "vet",
+    "nome": "Dra. Ana Vet"
+  }
+]
