@@ -1,48 +1,68 @@
 # PetShop Manager
 
-Sistema de gestão para pet shops desenvolvido em PHP, com controle de clientes, pets, serviços, agendamentos e módulo financeiro. Dados persistidos em arquivos JSON, com dashboard de indicadores.
+Sistema de gestão para pet shops desenvolvido em PHP, com controle de clientes, pets, serviços, agendamentos e módulo financeiro.
 
 ## Funcionalidades
 
-- Autenticação de usuários com perfis distintos (ex.: atendente, veterinário)
+- Autenticação de usuários com perfis distintos (cliente, atendente, veterinário)
 - Cadastro de clientes e seus respectivos pets
 - Catálogo de serviços (banho, tosa, consultas, etc.)
-- Agenda de atendimentos com controle de status (agendado/concluído)
-- Módulo financeiro com registro de entradas e saídas, e cálculo automático de receita e lucro mensal
+- Agenda de atendimentos com controle de status
+- Módulo financeiro com registro de entradas e saídas
 - Relatórios gerenciais
-- Perfis de sistema com informações da equipe
 
 ## Tecnologias
 
-- PHP (sem framework)
+- PHP 8 (sem framework)
+- **PostgreSQL** via PDO, com prepared statements em toda consulta
 - HTML5 / CSS3
-- Armazenamento de dados: JSON
 
-## Como rodar localmente
+## Arquitetura de dados
 
-1. Tenha o PHP instalado (versão 8+) ou use Laragon/XAMPP.
-2. Clone o repositório e entre na pasta do projeto.
-3. Inicie um servidor local:
-   ```bash
-   php -S localhost:8000
-   ```
-4. Acesse `http://localhost:8000` no navegador.
+`ler_json()`/`salvar_json()`, em `functions.php`, viraram um adaptador: por baixo é PostgreSQL via PDO, por cima devolvem exatamente os arrays que `clientes.php`, `pets.php`, `servicos.php` e `agendamentos.php` já esperavam.
 
-## Dados de demonstração
-
-Os arquivos `clientes.json`, `pets.json`, `servicos.json`, `agendamentos.json` e `financeiro.json` já vêm com dados fictícios de exemplo para facilitar os testes. Nenhum dado real de cliente é utilizado.
+```
+database/
+├── schema.sql          # DDL completo (7 tabelas)
+├── seed.sql             # dados de demonstração, migrados do JSON legado
+└── dados_legado/        # JSONs originais, mantidos só como referência histórica
+```
 
 ## Segurança
 
-- Senhas armazenadas com `password_hash()` (bcrypt) em `usuarios.json` e verificadas com `password_verify()` — nada de credencial em texto puro no código-fonte
-- Proteção CSRF em todos os formulários que alteram dados (login, clientes, pets, agendamentos, serviços, financeiro, perfil), com token validado via `hash_equals()`
+- Senhas com `password_hash()`/`password_verify()` (bcrypt)
+- **Bloqueio de conta por força bruta**: 5 tentativas de login incorretas seguidas bloqueiam a conta por 15 minutos
+- Proteção CSRF em todos os formulários que alteram dado
+- Cookies de sessão com `httponly`, `samesite=Lax` e `secure` (quando em HTTPS)
+- `.htaccess` bloqueando acesso direto a `.env`/`.sql`/`.log` e às pastas `app/`, `database/`
 
-## Próximos passos (roadmap)
+## Como rodar localmente
 
-- Migrar armazenamento de JSON para um banco de dados relacional (PostgreSQL)
-- Adicionar validação de formulários no front-end
-- Adicionar testes automatizados
+```bash
+createdb petshop
+psql petshop < database/schema.sql
+psql petshop < database/seed.sql
+
+cp .env.example .env
+
+php -S localhost:8000
+```
+
+Acesse `http://localhost:8000`.
+
+### Credenciais de demonstração
+
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Cliente | cliente@petshop.com | cliente123 |
+| Atendente | atendente@petshop.com | atendente123 |
+| Veterinária | vet@petshop.com | vet123 |
+
+## Roadmap
+
+- [ ] Testes automatizados
+- [ ] Paginação nas listagens
 
 ## Autor
 
-Desenvolvido por **Arthur Sousa da Costa** como projeto de portfólio.
+Desenvolvido por **Arthur Sousa da Costa** — [LinkedIn](https://www.linkedin.com/in/arthur-sousa-ads/) · [GitHub](https://github.com/arthursousa-dev)
