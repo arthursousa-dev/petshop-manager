@@ -1,26 +1,156 @@
 <?php
+// ler_json/salvar_json: adaptador de persistência (interface JSON
+// original, backend PostgreSQL via PDO com prepared statements).
+
+use App\Config\Database;
+
+require_once __DIR__ . '/app/Config/Database.php';
+
 function ler_json($arquivo) {
-    if (!file_exists($arquivo)) return [];
-    $fp = fopen($arquivo, 'r');
-    if (!$fp) return [];
-    flock($fp, LOCK_SH);
-    $conteudo = fread($fp, max(1, filesize($arquivo)));
-    flock($fp, LOCK_UN);
-    fclose($fp);
-    $dados = json_decode($conteudo, true);
-    return is_array($dados) ? $dados : [];
+    $pdo = Database::getConnection();
+
+    switch ($arquivo) {
+        case 'clientes.json':
+            return $pdo->query('SELECT * FROM clientes ORDER BY nome')->fetchAll();
+
+        case 'pets.json':
+            return $pdo->query('SELECT * FROM pets ORDER BY nome')->fetchAll();
+
+        case 'servicos.json':
+            return $pdo->query('SELECT * FROM servicos ORDER BY nome')->fetchAll();
+
+        case 'agendamentos.json':
+            $stmt = $pdo->query(
+                "SELECT id, cliente_id, pet_id, servico_id,
+                        to_char(data_hora, 'YYYY-MM-DD\"T\"HH24:MI') AS data_hora,
+                        status, observacoes, criado_em
+                 FROM agendamentos ORDER BY data_hora DESC"
+            );
+            return $stmt->fetchAll();
+
+        case 'perfis_sistema.json':
+            return $pdo->query('SELECT * FROM perfis_bio ORDER BY email')->fetchAll();
+
+        default:
+            return [];
+    }
 }
 
 function salvar_json($arquivo, $dados) {
-    $fp = fopen($arquivo, 'c');
-    if (!$fp) return false;
-    flock($fp, LOCK_EX);
-    ftruncate($fp, 0);
-    rewind($fp);
-    fwrite($fp, json_encode($dados, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    flock($fp, LOCK_UN);
-    fclose($fp);
-    return true;
+    $pdo = Database::getConnection();
+
+    try {
+        $pdo->beginTransaction();
+
+        switch ($arquivo) {
+            case 'clientes.json':
+                $idsAtuais = $pdo->query('SELECT id FROM clientes')->fetchAll(\PDO::FETCH_COLUMN);
+                $upsert = $pdo->prepare(
+                    'INSERT INTO clientes (id, nome, email, telefone, endereco)
+                     VALUES (:id, :nome, :email, :telefone, :endereco)
+                     ON CONFLICT (id) DO UPDATE SET
+                        nome=EXCLUDED.nome, email=EXCLUDED.email, telefone=EXCLUDED.telefone, endereco=EXCLUDED.endereco'
+                );
+                foreach ($dados as $c) {
+                    $upsert->execute([
+                        ':id' => $c['id'], ':nome' => $c['nome'], ':email' => $c['email'] ?? null,
+                        ':telefone' => $c['telefone'] ?? null, ':endereco' => $c['endereco'] ?? null,
+                    ]);
+                }
+                $remover = array_diff($idsAtuais, array_column($dados, 'id'));
+                if ($remover) {
+                    $pdo->prepare('DELETE FROM clientes WHERE id = ANY(:ids)')->execute([':ids' => '{' . implode(',', $remover) . '}']);
+                }
+                break;
+
+            case 'pets.json':
+                $idsAtuais = $pdo->query('SELECT id FROM pets')->fetchAll(\PDO::FETCH_COLUMN);
+                $upsert = $pdo->prepare(
+                    'INSERT INTO pets (id, nome, cliente_id, especie, raca, peso, alergias, nascimento)
+                     VALUES (:id, :nome, :cliente_id, :especie, :raca, :peso, :alergias, NULLIF(:nascimento, \'\')::date)
+                     ON CONFLICT (id) DO UPDATE SET
+                        nome=EXCLUDED.nome, cliente_id=EXCLUDED.cliente_id, especie=EXCLUDED.especie,
+                        raca=EXCLUDED.raca, peso=EXCLUDED.peso, alergias=EXCLUDED.alergias, nascimento=EXCLUDED.nascimento'
+                );
+                foreach ($dados as $p) {
+                    $upsert->execute([
+                        ':id' => $p['id'], ':nome' => $p['nome'], ':cliente_id' => $p['cliente_id'],
+                        ':especie' => $p['especie'], ':raca' => $p['raca'] ?? null,
+                        ':peso' => $p['peso'] !== '' ? ($p['peso'] ?? null) : null,
+                        ':alergias' => $p['alergias'] ?? null, ':nascimento' => $p['nascimento'] ?? '',
+                    ]);
+                }
+                $remover = array_diff($idsAtuais, array_column($dados, 'id'));
+                if ($remover) {
+                    $pdo->prepare('DELETE FROM pets WHERE id = ANY(:ids)')->execute([':ids' => '{' . implode(',', $remover) . '}']);
+                }
+                break;
+
+            case 'servicos.json':
+                $idsAtuais = $pdo->query('SELECT id FROM servicos')->fetchAll(\PDO::FETCH_COLUMN);
+                $upsert = $pdo->prepare(
+                    'INSERT INTO servicos (id, nome, descricao, preco, duracao)
+                     VALUES (:id, :nome, :descricao, :preco, :duracao)
+                     ON CONFLICT (id) DO UPDATE SET
+                        nome=EXCLUDED.nome, descricao=EXCLUDED.descricao, preco=EXCLUDED.preco, duracao=EXCLUDED.duracao'
+                );
+                foreach ($dados as $s) {
+                    $upsert->execute([
+                        ':id' => $s['id'], ':nome' => $s['nome'], ':descricao' => $s['descricao'] ?? null,
+                        ':preco' => $s['preco'], ':duracao' => $s['duracao'] ?? null,
+                    ]);
+                }
+                $remover = array_diff($idsAtuais, array_column($dados, 'id'));
+                if ($remover) {
+                    $pdo->prepare('DELETE FROM servicos WHERE id = ANY(:ids)')->execute([':ids' => '{' . implode(',', $remover) . '}']);
+                }
+                break;
+
+            case 'agendamentos.json':
+                $idsAtuais = $pdo->query('SELECT id FROM agendamentos')->fetchAll(\PDO::FETCH_COLUMN);
+                $upsert = $pdo->prepare(
+                    'INSERT INTO agendamentos (id, cliente_id, pet_id, servico_id, data_hora, status, observacoes)
+                     VALUES (:id, :cliente_id, :pet_id, :servico_id, :data_hora, :status, :observacoes)
+                     ON CONFLICT (id) DO UPDATE SET
+                        cliente_id=EXCLUDED.cliente_id, pet_id=EXCLUDED.pet_id, servico_id=EXCLUDED.servico_id,
+                        data_hora=EXCLUDED.data_hora, status=EXCLUDED.status, observacoes=EXCLUDED.observacoes'
+                );
+                foreach ($dados as $a) {
+                    $upsert->execute([
+                        ':id' => $a['id'], ':cliente_id' => $a['cliente_id'], ':pet_id' => $a['pet_id'],
+                        ':servico_id' => $a['servico_id'], ':data_hora' => str_replace('T', ' ', $a['data_hora']),
+                        ':status' => $a['status'], ':observacoes' => $a['observacoes'] ?? null,
+                    ]);
+                }
+                $remover = array_diff($idsAtuais, array_column($dados, 'id'));
+                if ($remover) {
+                    $pdo->prepare('DELETE FROM agendamentos WHERE id = ANY(:ids)')->execute([':ids' => '{' . implode(',', $remover) . '}']);
+                }
+                break;
+
+            case 'perfis_sistema.json':
+                $upsert = $pdo->prepare(
+                    'INSERT INTO perfis_bio (email, nome, telefone, bio)
+                     VALUES (:email, :nome, :telefone, :bio)
+                     ON CONFLICT (email) DO UPDATE SET
+                        nome=EXCLUDED.nome, telefone=EXCLUDED.telefone, bio=EXCLUDED.bio'
+                );
+                foreach ($dados as $p) {
+                    $upsert->execute([
+                        ':email' => $p['email'], ':nome' => $p['nome'] ?? null,
+                        ':telefone' => $p['telefone'] ?? null, ':bio' => $p['bio'] ?? null,
+                    ]);
+                }
+                break;
+        }
+
+        $pdo->commit();
+        return true;
+    } catch (\Throwable $e) {
+        $pdo->rollBack();
+        error_log('salvar_json falhou (' . $arquivo . '): ' . $e->getMessage());
+        return false;
+    }
 }
 
 function verificar_sessao() {
@@ -52,13 +182,34 @@ function perfil_pode($perfis_permitidos) {
  * Retorna o registro do usuário ou false.
  */
 function autenticar($email, $senha) {
-    $usuarios = ler_json('usuarios.json');
-    foreach ($usuarios as $u) {
-        if (strtolower($u['email']) === strtolower($email) && password_verify($senha, $u['senha'] ?? '')) {
-            return $u;
-        }
+    $pdo = Database::getConnection();
+    $email = strtolower(trim($email));
+
+    $stmt = $pdo->prepare('SELECT * FROM usuarios WHERE email = :email');
+    $stmt->execute([':email' => $email]);
+    $u = $stmt->fetch();
+
+    if (!$u) {
+        return false;
     }
-    return false;
+
+    if ($u['bloqueado_ate'] !== null && strtotime($u['bloqueado_ate']) > time()) {
+        return false;
+    }
+
+    if (!password_verify($senha, $u['senha_hash'])) {
+        $tentativas = (int) $u['tentativas_login'] + 1;
+        $bloqueio = $tentativas >= 5 ? "now() + interval '15 minutes'" : 'NULL';
+        $pdo->prepare("UPDATE usuarios SET tentativas_login = :t, bloqueado_ate = {$bloqueio} WHERE email = :email")
+            ->execute([':t' => $tentativas, ':email' => $email]);
+        return false;
+    }
+
+    $pdo->prepare('UPDATE usuarios SET tentativas_login = 0, bloqueado_ate = NULL WHERE email = :email')
+        ->execute([':email' => $email]);
+
+    $u['senha'] = $u['senha_hash']; // compatibilidade
+    return $u;
 }
 
 /**
