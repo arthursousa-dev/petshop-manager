@@ -229,3 +229,50 @@ function csrf_campo() {
 function csrf_valido($token) {
     return !empty($_SESSION['csrf_token']) && !empty($token) && hash_equals($_SESSION['csrf_token'], $token);
 }
+
+/**
+ * Fatia uma lista já filtrada/ordenada em páginas, lendo a página
+ * atual de $_GET['pagina'].
+ */
+function paginar(array $itens, int $porPagina = 15): array {
+    $total = count($itens);
+    $totalPaginas = max(1, (int) ceil($total / $porPagina));
+    $paginaAtual = max(1, min($totalPaginas, (int) ($_GET['pagina'] ?? 1)));
+    $offset = ($paginaAtual - 1) * $porPagina;
+
+    return [
+        'itens' => array_slice($itens, $offset, $porPagina),
+        'pagina_atual' => $paginaAtual,
+        'total_paginas' => $totalPaginas,
+        'total_itens' => $total,
+    ];
+}
+
+/**
+ * Monta os controles de paginação, preservando os filtros já
+ * aplicados na querystring.
+ */
+function controlesPaginacao(array $paginacao): string {
+    if ($paginacao['total_paginas'] <= 1) {
+        return '';
+    }
+
+    $paramsBase = $_GET;
+    unset($paramsBase['pagina']);
+    $linkPara = fn($p) => '?' . http_build_query(array_merge($paramsBase, ['pagina' => $p]));
+
+    $atual = $paginacao['pagina_atual'];
+    $totalPag = $paginacao['total_paginas'];
+
+    $html = '<nav class="paginacao" aria-label="Navegação de páginas" style="display:flex;gap:6px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap">';
+    $html .= $atual > 1 ? '<a href="' . $linkPara($atual - 1) . '">‹ Anterior</a>' : '<span style="opacity:.4">‹ Anterior</span>';
+    for ($p = 1; $p <= $totalPag; $p++) {
+        $html .= $p === $atual
+            ? '<span aria-current="page" style="padding:6px 12px;font-weight:700">' . $p . '</span>'
+            : '<a href="' . $linkPara($p) . '" style="padding:6px 12px">' . $p . '</a>';
+    }
+    $html .= $atual < $totalPag ? '<a href="' . $linkPara($atual + 1) . '">Próxima ›</a>' : '<span style="opacity:.4">Próxima ›</span>';
+    $html .= '</nav>';
+
+    return $html;
+}

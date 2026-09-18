@@ -88,6 +88,7 @@ function get_cliente_nome($clientes, $id) {
     <?php endif; ?>
   </div>
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
+  <?php $pagPets = paginar(array_values($pets)); ?>
   <div class="section-box">
     <table class="table">
       <thead><tr><th>Nome</th><th>Proprietário</th><th>Espécie</th><th>Raça</th><th>Peso</th><th>Alergias / Obs.</th><?= perfil_pode(['atendente','vet']) ? '<th>Ações</th>' : '' ?></tr></thead>
@@ -95,7 +96,7 @@ function get_cliente_nome($clientes, $id) {
       <?php if (empty($pets)): ?>
       <tr><td colspan="7" class="empty-msg">Nenhum pet cadastrado.</td></tr>
       <?php else: ?>
-      <?php foreach ($pets as $pt): ?>
+      <?php foreach ($pagPets['itens'] as $pt): ?>
       <tr>
         <td><strong><?= htmlspecialchars($pt['nome']) ?></strong></td>
         <td><?= htmlspecialchars(get_cliente_nome($clientes, $pt['cliente_id'])) ?></td>
@@ -119,6 +120,7 @@ function get_cliente_nome($clientes, $id) {
       <?php endif; ?>
       </tbody>
     </table>
+    <?= controlesPaginacao($pagPets) ?>
   </div>
 </div>
 

@@ -89,6 +89,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
     <button class="btn-primary" onclick="abrirModal('modal-criar')">+ Novo Agendamento</button>
   </div>
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
+  <?php $pagAg = paginar(array_values($agendamentos)); ?>
   <div class="section-box">
     <table class="table">
       <thead><tr><th>Data/Hora</th><th>Pet</th><th>Serviço</th><?= $perfil !== 'cliente' ? '<th>Cliente</th>' : '' ?><th>Status</th><th>Obs.</th><th>Ações</th></tr></thead>
@@ -96,7 +97,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
       <?php if (empty($agendamentos)): ?>
       <tr><td colspan="7" class="empty-msg">Nenhum agendamento encontrado.</td></tr>
       <?php else: ?>
-      <?php foreach ($agendamentos as $ag): ?>
+      <?php foreach ($pagAg['itens'] as $ag): ?>
       <tr>
         <td><?= date('d/m/Y H:i', strtotime($ag['data_hora'])) ?></td>
         <td><strong><?= htmlspecialchars(nome_pet($pets, $ag['pet_id'])) ?></strong></td>
@@ -132,6 +133,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
       <?php endif; ?>
       </tbody>
     </table>
+    <?= controlesPaginacao($pagAg) ?>
   </div>
 </div>
 

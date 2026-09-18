@@ -243,6 +243,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
   <?php if ($erro): ?><div class="alert alert-error">⚠️ <?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
+  <?php $pagCli = paginar(array_values($clientes)); ?>
   <div class="section-box">
     <table class="table">
       <thead>
@@ -255,7 +256,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
       <?php if (empty($clientes)): ?>
         <tr><td colspan="6" class="empty-msg">Nenhum cliente cadastrado.</td></tr>
       <?php else: ?>
-        <?php foreach ($clientes as $cl): ?>
+        <?php foreach ($pagCli['itens'] as $cl): ?>
         <tr>
           <td><strong><?= htmlspecialchars($cl['nome']) ?></strong></td>
           <td><?= htmlspecialchars($cl['email']) ?></td>
@@ -278,6 +279,7 @@ $titulo_pagina = ($perfil === 'cliente') ? 'Meu Perfil' : 'Clientes';
       <?php endif; ?>
       </tbody>
     </table>
+    <?= controlesPaginacao($pagCli) ?>
   </div>
 
   <?php if (perfil_pode(['atendente','vet'])): ?>
