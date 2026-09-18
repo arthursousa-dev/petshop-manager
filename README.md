@@ -60,8 +60,17 @@ Acesse `http://localhost:8000`.
 
 ## Roadmap
 
-- [ ] Testes automatizados
-- [ ] Paginação nas listagens
+- [x] Testes automatizados
+- [x] Paginação nas listagens
+
+## Testes
+
+```bash
+composer install
+createdb petshop_test
+psql petshop_test < database/schema.sql
+DB_NAME=petshop_test vendor/bin/phpunit
+```
 
 ## Autor
 
