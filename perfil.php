@@ -12,6 +12,7 @@ if ($_SESSION['perfil'] === 'cliente') {
 $perfil  = $_SESSION['perfil'];
 $email   = $_SESSION['usuario']['email'];
 $msg     = '';
+$erro    = '';
 
 // Carrega perfis do sistema
 $perfis = ler_json('perfis_sistema.json');
@@ -40,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'editar'
     }
     $perfis[$idx_perfil]['telefone'] = trim($_POST['telefone'] ?? '');
     $perfis[$idx_perfil]['bio']      = trim($_POST['bio'] ?? '');
-    salvar_json('perfis_sistema.json', $perfis);
-    $msg = 'Perfil atualizado!';
+    if (salvar_json('perfis_sistema.json', $perfis)) $msg = 'Perfil atualizado!';
+    else $erro = 'Não foi possível salvar. Verifique os dados informados.';
     $meu = $perfis[$idx_perfil];
 }
 
@@ -77,6 +78,7 @@ $ags_total      = count(ler_json('agendamentos.json'));
   </div>
 
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
+  <?php if ($erro): ?><div class="alert alert-error">⚠️ <?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
   <!-- Stats rápidas -->
   <div class="stat-row">

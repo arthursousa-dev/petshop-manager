@@ -7,6 +7,7 @@ $perfil = $_SESSION['perfil'];
 $pets = ler_json('pets.json');
 $clientes = ler_json('clientes.json');
 $msg = '';
+$erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['atendente','vet'])) {
     if (!csrf_valido($_POST['csrf_token'] ?? null)) {
@@ -27,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['atendente','vet'])) {
             'criado_em' => date('Y-m-d H:i:s')
         ];
         $pets[] = $novo;
-        salvar_json('pets.json', $pets);
-        $msg = 'Pet cadastrado com sucesso!';
+        if (salvar_json('pets.json', $pets)) $msg = 'Pet cadastrado com sucesso!';
+        else $erro = 'Não foi possível salvar. Verifique os dados informados.';
     } elseif ($acao === 'editar') {
         $id = $_POST['id'] ?? '';
         foreach ($pets as &$pt) {
@@ -43,13 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['atendente','vet'])) {
                 break;
             }
         }
-        salvar_json('pets.json', $pets);
-        $msg = 'Pet atualizado!';
+        if (salvar_json('pets.json', $pets)) $msg = 'Pet atualizado!';
+        else $erro = 'Não foi possível salvar. Verifique os dados informados.';
     } elseif ($acao === 'excluir') {
         $id = $_POST['id'] ?? '';
         $pets = array_values(array_filter($pets, fn($p) => $p['id'] !== $id));
-        salvar_json('pets.json', $pets);
-        $msg = 'Pet removido.';
+        if (salvar_json('pets.json', $pets)) $msg = 'Pet removido.';
+        else $erro = 'Não foi possível salvar. Verifique os dados informados.';
     }
     $pets = ler_json('pets.json');
 }
@@ -88,6 +89,7 @@ function get_cliente_nome($clientes, $id) {
     <?php endif; ?>
   </div>
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
+  <?php if ($erro): ?><div class="alert alert-error">⚠️ <?= htmlspecialchars($erro) ?></div><?php endif; ?>
   <?php $pagPets = paginar(array_values($pets)); ?>
   <div class="section-box">
     <table class="table">

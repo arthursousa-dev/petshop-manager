@@ -31,8 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         unset($cl);
-        salvar_json('clientes.json', $clientes);
-        $msg = 'Perfil atualizado com sucesso!';
+        if (salvar_json('clientes.json', $clientes)) $msg = 'Perfil atualizado com sucesso!';
+        else $erro = 'Não foi possível salvar. Verifique os dados informados.';
         $clientes = ler_json('clientes.json');
     }
     // Atendente/Vet faz CRUD completo
@@ -50,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $erro = 'Nome e e-mail são obrigatórios.';
             } else {
                 $clientes[] = $novo;
-                salvar_json('clientes.json', $clientes);
-                $msg = 'Cliente cadastrado com sucesso!';
+                if (salvar_json('clientes.json', $clientes)) $msg = 'Cliente cadastrado com sucesso!';
+                else $erro = 'Não foi possível salvar. Verifique os dados informados.';
             }
         } elseif ($acao === 'editar') {
             $id = $_POST['id'] ?? '';
@@ -65,13 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             unset($cl);
-            salvar_json('clientes.json', $clientes);
-            $msg = 'Cliente atualizado!';
+            if (salvar_json('clientes.json', $clientes)) $msg = 'Cliente atualizado!';
+            else $erro = 'Não foi possível salvar. Verifique os dados informados.';
         } elseif ($acao === 'excluir') {
             $id = $_POST['id'] ?? '';
             $clientes = array_values(array_filter($clientes, fn($c) => $c['id'] !== $id));
-            salvar_json('clientes.json', $clientes);
-            $msg = 'Cliente removido.';
+            if (salvar_json('clientes.json', $clientes)) $msg = 'Cliente removido.';
+            else $erro = 'Não foi possível salvar. Verifique os dados informados.';
         }
         $clientes = ler_json('clientes.json');
     }

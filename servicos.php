@@ -6,6 +6,7 @@ $perfil = $_SESSION['perfil'];
 
 $servicos = ler_json('servicos.json');
 $msg = '';
+$erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['vet'])) {
     if (!csrf_valido($_POST['csrf_token'] ?? null)) {
@@ -23,8 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['vet'])) {
             'criado_em' => date('Y-m-d H:i:s')
         ];
         $servicos[] = $novo;
-        salvar_json('servicos.json', $servicos);
-        $msg = 'Serviço criado!';
+        if (salvar_json('servicos.json', $servicos)) $msg = 'Serviço criado!';
+        else $erro = 'Não foi possível salvar. Verifique os dados informados.';
     } elseif ($acao === 'editar') {
         $id = $_POST['id'] ?? '';
         foreach ($servicos as &$sv) {
@@ -37,13 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['vet'])) {
             }
         }
         unset($sv);
-        salvar_json('servicos.json', $servicos);
-        $msg = 'Serviço atualizado!';
+        if (salvar_json('servicos.json', $servicos)) $msg = 'Serviço atualizado!';
+        else $erro = 'Não foi possível salvar. Verifique os dados informados.';
     } elseif ($acao === 'excluir') {
         $id = $_POST['id'] ?? '';
         $servicos = array_values(array_filter($servicos, fn($s) => $s['id'] !== $id));
-        salvar_json('servicos.json', $servicos);
-        $msg = 'Serviço removido.';
+        if (salvar_json('servicos.json', $servicos)) $msg = 'Serviço removido.';
+        else $erro = 'Este serviço tem agendamentos e não pode ser removido.';
     }
     $servicos = ler_json('servicos.json');
 }
@@ -67,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && perfil_pode(['vet'])) {
   </div>
 
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
+  <?php if ($erro): ?><div class="alert alert-error">⚠️ <?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
   <div class="section-box">
     <?php if ($perfil === 'cliente'): ?>
