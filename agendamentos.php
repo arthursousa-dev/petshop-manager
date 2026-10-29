@@ -9,6 +9,7 @@ $pets = ler_json('pets.json');
 $clientes = ler_json('clientes.json');
 $servicos = ler_json('servicos.json');
 $msg = '';
+$erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido($_POST['csrf_token'] ?? null)) {
@@ -28,27 +29,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'criado_em' => date('Y-m-d H:i:s')
         ];
         if ($perfil === 'cliente') {
+            // Cliente só agenda para si: sem cadastro vinculado, o cliente_id do POST não é aceito.
             $meu_email = $_SESSION['usuario']['email'];
-            $meu_cl = null;
-            foreach ($clientes as $cl) { if ($cl['email'] === $meu_email) { $meu_cl = $cl; break; } }
-            if ($meu_cl) $novo['cliente_id'] = $meu_cl['id'];
+            $novo['cliente_id'] = '';
+            foreach ($clientes as $cl) { if ($cl['email'] === $meu_email) { $novo['cliente_id'] = $cl['id']; break; } }
         }
-        $agendamentos[] = $novo;
-        salvar_json('agendamentos.json', $agendamentos);
-        $msg = 'Agendamento criado com sucesso!';
+        $pet = null;
+        foreach ($pets as $p) { if ($p['id'] === $novo['pet_id']) { $pet = $p; break; } }
+        $dt = DateTime::createFromFormat('!Y-m-d\TH:i', $novo['data_hora']);
+
+        if ($novo['cliente_id'] === '' || !$pet || $pet['cliente_id'] !== $novo['cliente_id']) {
+            $erro = 'Escolha um pet do cliente selecionado.';
+        } elseif (!in_array($novo['servico_id'], array_column($servicos, 'id'), true)) {
+            $erro = 'Serviço inválido.';
+        } elseif (!$dt || $dt->format('Y-m-d\TH:i') !== $novo['data_hora']) {
+            $erro = 'Data e hora inválidas.';
+        } else {
+            $agendamentos[] = $novo;
+            if (salvar_json('agendamentos.json', $agendamentos)) $msg = 'Agendamento criado com sucesso!';
+            else $erro = 'Não foi possível salvar o agendamento.';
+        }
     } elseif ($acao === 'status' && perfil_pode(['atendente','vet'])) {
         $id = $_POST['id'] ?? '';
         $ns = $_POST['novo_status'] ?? '';
-        foreach ($agendamentos as &$ag) {
-            if ($ag['id'] === $id) { $ag['status'] = $ns; break; }
+        if (!in_array($ns, ['agendado', 'em_atendimento', 'concluido', 'cancelado'], true)) {
+            $erro = 'Status inválido.';
+        } else {
+            foreach ($agendamentos as &$ag) {
+                if ($ag['id'] === $id) { $ag['status'] = $ns; break; }
+            }
+            unset($ag);
+            if (salvar_json('agendamentos.json', $agendamentos)) $msg = 'Status atualizado!';
+            else $erro = 'Não foi possível atualizar o status.';
         }
-        salvar_json('agendamentos.json', $agendamentos);
-        $msg = 'Status atualizado!';
     } elseif ($acao === 'excluir' && perfil_pode(['atendente','vet'])) {
         $id = $_POST['id'] ?? '';
         $agendamentos = array_values(array_filter($agendamentos, fn($a) => $a['id'] !== $id));
-        salvar_json('agendamentos.json', $agendamentos);
-        $msg = 'Agendamento removido.';
+        if (salvar_json('agendamentos.json', $agendamentos)) $msg = 'Agendamento removido.';
+        else $erro = 'Não foi possível remover o agendamento.';
     }
     $agendamentos = ler_json('agendamentos.json');
 }
@@ -89,6 +107,7 @@ function nome_cl($clientes, $id) { foreach($clientes as $c){ if($c['id']===$id) 
     <button class="btn-primary" onclick="abrirModal('modal-criar')">+ Novo Agendamento</button>
   </div>
   <?php if ($msg): ?><div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div><?php endif; ?>
+  <?php if ($erro): ?><div class="alert alert-error">⚠️ <?= htmlspecialchars($erro) ?></div><?php endif; ?>
   <?php $pagAg = paginar(array_values($agendamentos)); ?>
   <div class="section-box">
     <table class="table">
