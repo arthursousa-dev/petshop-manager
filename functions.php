@@ -31,6 +31,12 @@ function ler_json($arquivo) {
         case 'perfis_sistema.json':
             return $pdo->query('SELECT * FROM perfis_bio ORDER BY email')->fetchAll();
 
+        case 'financeiro.json':
+            return $pdo->query(
+                "SELECT id, to_char(data, 'YYYY-MM-DD') AS data, tipo, categoria, valor, descricao
+                 FROM financeiro_lancamentos ORDER BY data DESC, id DESC"
+            )->fetchAll();
+
         default:
             return [];
     }

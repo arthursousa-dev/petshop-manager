@@ -16,7 +16,12 @@ $mes_filtro  = $_GET['mes']  ?? date('Y-m');
 $aba         = $_GET['aba']  ?? 'agendamentos';
 
 // MÊS ANTERIOR (para comparação)
-$dt_atual    = DateTime::createFromFormat('Y-m', $mes_filtro);
+// '!' zera o dia: sem ele o dia de hoje é herdado, e em 29–31 '2026-02' vira março.
+$dt_atual    = DateTime::createFromFormat('!Y-m', $mes_filtro);
+if (!$dt_atual || $dt_atual->format('Y-m') !== $mes_filtro) {
+    $mes_filtro = date('Y-m');
+    $dt_atual   = DateTime::createFromFormat('!Y-m', $mes_filtro);
+}
 $dt_ant      = clone $dt_atual; $dt_ant->modify('-1 month');
 $mes_ant     = $dt_ant->format('Y-m');
 
