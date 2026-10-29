@@ -14,18 +14,6 @@ $servicos = ler_json('servicos.json');
 $hoje = date('Y-m-d');
 $mes = date('Y-m');
 
-$financeiro = ler_json('financeiro.json');
-$entradas_mes=0; $saidas_mes=0;
-foreach($financeiro as $f){
- if(substr($f['data'],0,7)===$mes){
-   if($f['tipo']==='entrada') $entradas_mes += floatval($f['valor']);
-   if($f['tipo']==='saida') $saidas_mes += floatval($f['valor']);
- }
-}
-$receita_mes += $entradas_mes;
-$lucro_mes = $receita_mes - $saidas_mes;
-
-
 $ags_hoje = array_filter($agendamentos, fn($a) => substr($a['data_hora'], 0, 10) === $hoje);
 $receita_mes = 0;
 foreach ($agendamentos as $ag) {
@@ -37,6 +25,19 @@ foreach ($agendamentos as $ag) {
         }
     }
 }
+
+// Lançamentos manuais do financeiro entram depois da receita de serviços (antes eram somados
+// numa variável ainda indefinida e zerados logo em seguida).
+$financeiro = ler_json('financeiro.json');
+$entradas_mes=0; $saidas_mes=0;
+foreach($financeiro as $f){
+ if(substr($f['data'],0,7)===$mes){
+   if($f['tipo']==='entrada') $entradas_mes += floatval($f['valor']);
+   if($f['tipo']==='saida') $saidas_mes += floatval($f['valor']);
+ }
+}
+$receita_mes += $entradas_mes;
+$lucro_mes = $receita_mes - $saidas_mes;
 
 if ($perfil === 'cliente') {
     $meu_cliente = null;
