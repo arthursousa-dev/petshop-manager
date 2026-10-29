@@ -2,9 +2,12 @@
 require_once __DIR__ . '/bootstrap_sessao.php';
 require 'functions.php';
 verificar_sessao();
+// O menu já escondia esta página do cliente, mas a URL continuava aberta para leitura e gravação.
+if (!perfil_pode(['atendente','vet'])) { header('Location: index.php'); exit; }
 
 $pdo = \App\Config\Database::getConnection();
 
+$erro = '';
 $totalEntradas = (float) ($pdo->query("SELECT COALESCE(SUM(valor),0) FROM financeiro_lancamentos WHERE tipo = 'entrada'")->fetchColumn());
 $totalSaidas   = (float) ($pdo->query("SELECT COALESCE(SUM(valor),0) FROM financeiro_lancamentos WHERE tipo = 'saida'")->fetchColumn());
 
@@ -13,16 +16,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(403);
         die('Sessão expirada. Recarregue a página e tente novamente.');
     }
-    $stmt = $pdo->prepare(
-        'INSERT INTO financeiro_lancamentos (tipo, descricao, categoria, valor, data)
-         VALUES (:tipo, :descricao, :categoria, :valor, :data)'
-    );
-    $stmt->execute([
-        ':tipo' => $_POST['tipo'], ':descricao' => $_POST['descricao'],
-        ':categoria' => $_POST['categoria'], ':valor' => (float) $_POST['valor'], ':data' => $_POST['data'],
-    ]);
-    header('Location: financeiro.php');
-    exit;
+    $tipo      = $_POST['tipo'] ?? '';
+    $descricao = trim((string) ($_POST['descricao'] ?? ''));
+    $categoria = trim((string) ($_POST['categoria'] ?? ''));
+    $valor     = (float) ($_POST['valor'] ?? 0);
+    $data      = (string) ($_POST['data'] ?? '');
+    $dt        = DateTime::createFromFormat('!Y-m-d', $data);
+
+    // Tipo fora do enum, data inválida ou texto maior que a coluna derrubavam o INSERT com erro 500.
+    if (!in_array($tipo, ['entrada', 'saida'], true) || $descricao === '' || strlen($descricao) > 200
+        || strlen($categoria) > 80 || $valor <= 0 || $valor >= 1e8 || !$dt || $dt->format('Y-m-d') !== $data) {
+        $erro = 'Verifique tipo, descrição, valor e data do lançamento.';
+    } else {
+        $stmt = $pdo->prepare(
+            'INSERT INTO financeiro_lancamentos (tipo, descricao, categoria, valor, data)
+             VALUES (:tipo, :descricao, :categoria, :valor, :data)'
+        );
+        $stmt->execute([
+            ':tipo' => $tipo, ':descricao' => $descricao,
+            ':categoria' => $categoria !== '' ? $categoria : null, ':valor' => $valor, ':data' => $data,
+        ]);
+        header('Location: financeiro.php');
+        exit;
+    }
 }
 
 $dados = $pdo->query(
@@ -63,6 +79,7 @@ th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
 
 <div class="fin-form">
 <h2>Novo Lançamento</h2>
+<?php if ($erro): ?><p style="color:#c0392b;margin-bottom:12px"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
 <form method="post">
             <?= csrf_campo() ?>
 <div class="fin-grid">
@@ -70,9 +87,9 @@ th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
 <option value="entrada">Entrada</option>
 <option value="saida">Saída</option>
 </select>
-<input name="descricao" placeholder="Descrição" required>
-<input name="categoria" placeholder="Categoria">
-<input type="number" step="0.01" name="valor" placeholder="Valor" required>
+<input name="descricao" placeholder="Descrição" maxlength="200" required>
+<input name="categoria" placeholder="Categoria" maxlength="80">
+<input type="number" step="0.01" min="0.01" name="valor" placeholder="Valor" required>
 <input type="date" name="data" required>
 </div>
 <br>
